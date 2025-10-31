@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  /* 1. Add your custom colors */
+  --color-hacker-bg: #0D1117;
+  --color-hacker-bg-secondary: #161B22;
+  --color-hacker-green: #39FF14;
+  --color-hacker-green-mid: #23A20D;
+  --color-hacker-text: #E6EDF3;
+  --color-hacker-text-secondary: #8B949E;
+}
+
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
+
+h1 {
+  @apply text-2xl font-semibold text-hacker-green justify-between mx-auto
+}
+
+
+.user-message {
+  @apply text-hacker-green-mid whitespace-pre-wrap break-words m-8 p-8 text-right;
+}
+
+.bot-message {
+  @apply text-green-400 whitespace-pre-wrap break-words m-8 p-8 text-left;
+}
+
+.tool-message {
+  @apply text-yellow-400 italic whitespace-pre-wrap break-words  m-8 p-8;
+}
+
