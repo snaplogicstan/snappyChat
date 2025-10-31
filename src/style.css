@@ -20,14 +20,14 @@ h1 {
 
 
 .user-message {
-  @apply text-hacker-green-mid whitespace-pre-wrap break-words m-8 p-8 text-right;
+  @apply text-hacker-green-mid whitespace-pre-wrap break-words border-2 m-8 p-8 text-right;
 }
 
 .bot-message {
-  @apply text-green-400 whitespace-pre-wrap break-words m-8 p-8 text-left;
+  @apply text-green-400 whitespace-pre-wrap break-words border-2 m-8 p-8 text-left;
 }
 
 .tool-message {
-  @apply text-yellow-400 italic whitespace-pre-wrap break-words  m-8 p-8;
+  @apply text-yellow-400 italic whitespace-pre-wrap break-words border-2 m-8 p-8;
 }
 
