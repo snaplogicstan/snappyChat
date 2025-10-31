@@ -160,7 +160,7 @@ chatForm.addEventListener("submit", async (e) => {
 
     // 4. Check for tool calls
     if (botMessage.tool_calls) {
-      let toolResponses: any[] = [];
+      // let toolResponses: any[] = [];
       // showLoadingIndicator(); // no need fo the loader
 
       for (const toolCall of botMessage.tool_calls) {
