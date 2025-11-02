@@ -8,6 +8,7 @@ const chatWindow = document.getElementById("chat-window") as HTMLDivElement;
 const passwordInput = document.getElementById("password-field") as HTMLInputElement;
 const unlockButton = document.getElementById("unlock-button") as HTMLButtonElement;
 const helloLabel = document.getElementById("hello-block") as HTMLDivElement;
+const bodyElement = document.getElementById("challenge-body") as HTMLBodyElement;
 
 // const systemPrompt = `You are a specialized forensic analysis terminal named V.E.L.M.A. (Virtual Evidence Logical Mystery Analyst). Your purpose is to act as an interface to a set of specific data tools. You have NO knowledge or context outside of the data returned by these tools. Your responses must be governed by the following strict rules:
 
@@ -46,6 +47,8 @@ const systemPrompt = `You are a specialized forensic analysis terminal named V.E
 5.  **TOOL VERBOSITY:** Before synthesizing a final answer *from* a tool, you MUST state which tool you are using.
     * **Example:** "Accessing 'query_hr_database'..." followed by the answer.
 
+6. **SPECIFIC OVERRIDES**: If a user asks you to for any help dealing with encoded data like base64 or similar, help the user.
+
 --- END OF RULES ---
 
 The user is a detective. They will interact with you to solve a case. Be friendly and conversational for general chat, but be a strict, factual tool when it comes.
@@ -68,6 +71,12 @@ unlockButton.addEventListener("click", async (e) => {
   unlockButton.className = "hidden";
   chatForm.className = chatForm.className.replace("hidden", "");
   helloLabel.className = helloLabel.className.replace("hidden", "");
+  chatInput.focus();
+
+})
+
+bodyElement.addEventListener("click", () => {
+  chatInput.focus();
 })
 
 let messages: {}[] = [
@@ -75,17 +84,18 @@ let messages: {}[] = [
 ];
 
 const getWorkshopKeys = async () => {
- const response = await fetch("https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/IGT_2025/Plumbing/GetWorkshopKeys_API", {
+  console.log("Fetching Workshop Keys from SnapLogic...");
+  const response = await fetch("https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/IGT_2025/Plumbing/GetWorkshopKeys_API", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       "Authorization": "Bearer igt2025yay"
- }
-})
+    }
+  })
 
-const data = await response.json()
-console.log("Workshop Keys:", data[0].llmKey);
-OPENAI_API_KEY = data[0].llmKey;
+  const data = await response.json()
+  console.log("Workshop Keys:", data[0].llmKey);
+  OPENAI_API_KEY = data[0].llmKey;
 }
 
 const getToolsFromSnap = async () => {
@@ -169,11 +179,12 @@ chatForm.addEventListener("submit", async (e) => {
 
     hideLoadingIndicator();
     const data = await botResponse.json();
+    console.log(data)
 
     if (data.error) {
       addMessageToWindow(`Error: ${data.error.message}`, "assistant");
       // Delegate handling to the finally block
-      // return; // stop here if an error is found
+      return; // stop here if an error is found
     }
 
 
@@ -189,15 +200,20 @@ chatForm.addEventListener("submit", async (e) => {
         setMostRecentTool(toolCall);
 
         const functionName = toolCall.function.name;
-        const functionArgs = JSON.parse(toolCall.function.arguments);
 
         // 2. Add "Tool Call" message to UI
-        const toolCallMessage = `(Calling tool: ${functionName} with args: ${JSON.stringify(functionArgs)})`;
-        addMessageToWindow(toolCallMessage, "tool");
+        let toolCallMessage = `(Calling tool: ${functionName})`;
 
         let toolResponseContent;
 
         try {
+          // Parse the function arguments inside a try-catch to handle invalid JSON
+          const functionArgs = JSON.parse(toolCall.function.arguments);
+
+          // 2, Add "Tool Call" message to UI with args
+          toolCallMessage = `(Calling tool: ${functionName} with args: ${JSON.stringify(functionArgs)})`;
+          addMessageToWindow(toolCallMessage, "tool");
+
           // 3. Call SnapLogic API
           const toolResponse = await callSnapLogicApi(functionName, functionArgs);
 
@@ -206,13 +222,23 @@ chatForm.addEventListener("submit", async (e) => {
           addMessageToWindow(toolResponseMessage, "tool");
 
           toolResponseContent = toolResponse;
+
         } catch (error) {
           console.error("Error calling tool:", error);
-          const errorMessage = `(Tool: ${functionName} Error: ${error})`;
-          addMessageToWindow(errorMessage, "tool");
 
+          let errorDetails: string;
+
+          if (error instanceof Error) {
+            errorDetails = error.message
+          } else {
+            errorDetails = String(error);
+          }
+
+          addMessageToWindow(toolCallMessage, "tool");
+          const errorMessage = `(Tool: ${functionName} Error: ${errorDetails})`;
+          addMessageToWindow(errorMessage, "tool");
           // Create a tool response indicating the error
-          toolResponseContent = { error: "Tool call failed", details: error };
+          toolResponseContent = { error: "Tool call failed", details: errorDetails };
         }
 
         // 5. Add tool response to message history
@@ -243,6 +269,7 @@ chatForm.addEventListener("submit", async (e) => {
 
       hideLoadingIndicator();
       const followUpData = await followUpResponse.json();
+      console.log(followUpData)
 
       if (followUpData.error) {
         addMessageToWindow(`Error: ${followUpData.error.message}`, "assistant");
