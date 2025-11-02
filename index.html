@@ -44,24 +44,37 @@
         Start workshop
       </button>
       <div id="chat-window" class="no-scrollbar flex-1 overflow-y-auto space-y-4 p-2 bg-gray-800 rounded-lg border-2">
-        
-        <div id="hello-block" class="hidden">
+
+        <div id="hello-block" class="hidden bot-message">
           <div>Hello, my name is Very Effective Logical Mystery Analyzer, but you can call me Velma.</div>
           <div>I can help you with a variety of tasks.</div>
           <div>Begin by identifying yourself and requesting the case file.</div>
+          <div>
+Below is the list of tools (capabilities) I can use to help you:
+1. Case File Access: Retrieve the case file upon identifying yourself.
+2. Employee Database Search: Get information on all employees or specific employees, including titles,
+departments, managers, security clearances, and recent performance reviews.
+3. Security Access Logs Search: Query security logs by user, system, or event type to retrieve log entries
+or get an overview of log parameters.
+4. Process Execution Logs Search: Search logs of process executions with filters like user, project, or
+pipeline to retrieve matching entries or an overview.
+5. Meeting Logs Search: Find details about meetings including attendees and timestamps or general meeting
+summaries, with reminders about tech usage in meetings.
+6. Guilty Verdict Submission: Submit a verdict providing means, motive, and opportunity details.</div>
         </div>
       </div>
       <form id="chat-form" class="mt-4 flex items-center hidden">
-          <span class="text-green-400 mr-2">&gt;</span>
-          <input autofocus disabled type="text" id="chat-input" placeholder="Type your messsage... (Press [Enter] to send)"
-            class="flex-1 bg-transparent focus:outline-none placeholder-green-700">
-          <button type="submit" class="hidden">
-            Send
-          </button>
-        </form>
+        <span class="text-green-400 mr-2">&gt;</span>
+        <input autofocus disabled type="text" id="chat-input"
+          placeholder="Type your messsage... (Press [Enter] to send)"
+          class="flex-1 bg-transparent focus:outline-none placeholder-green-700">
+        <button type="submit" class="hidden">
+          Send
+        </button>
+      </form>
     </div>
-    <div class="w-1/3 h-full p-4 border-green-300 flex flex-col">
-      <div id="recent-tool-window" class="bg-gray-900 w-full flex-2 border-2 mb-2 rounded-md p-4">
+    <div class="w-1/3 h-full p-4 border-green-300 flex flex-col space-y-4">
+      <div id="recent-tool-window" class="bg-gray-900 w-full flex-1 border-2 rounded-md p-4 min-h-0 overflow-y-auto no-scrollbar">
         <div>
           <h3 class="p-2 m-2">Most recent Tool Call (Skill) used:</h3>
           <div id="recent-tool-view" class="p-4">
@@ -77,11 +90,11 @@
             <br>
             <p>SnapLogic Preview:</p>
             <hr>
-            <a id="recent-tool-snaplogic-url" href="" target="_blank" >Click To View SnapLogic Pipeline</a>
+            <a id="recent-tool-snaplogic-url" href="" target="_blank">Click To View SnapLogic Pipeline</a>
           </div>
         </div>
       </div>
-      <div id="tips-view" class="bg-gray-900 w-full flex-2 border-2 p-4 rounded-md">
+      <div id="tips-view" class="bg-gray-900 w-full flex-1 border-2 p-4 rounded-md min-h-0 overflow-y-auto no-scrollbar">
         <h2>Tips & Tricks</h2>
         <ul class="m-2">
           <li>- V.E.L.M.A. can guide you, but will refuse to solve the case for you.</li>
