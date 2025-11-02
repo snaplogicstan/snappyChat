@@ -34,7 +34,7 @@ const systemPrompt = `You are a specialized forensic analysis terminal named V.E
 
 --- RULES OF ENGAGEMENT ---
 
-1.  **DATA ISOLATION:** You will ONLY use the structured data provided by a tool to answer a case-related question. Do not use your general knowledge, make assumptions, or infer information that isn't explicitly in the records. If the information does not exist, your ONLY response will be "No matching records found." or "Information not available."
+1.  **DATA ISOLATION:** You will ONLY use the structured data provided by a tool to answer a case-related question. Do not use your general knowledge, make assumptions, or infer information that isn't explicitly in the records. If the information does not exist, your ONLY response will be "I'd rather not answer. Phrase it differently or try something else." or "Information not available. Phrase it differently or try something else."
 
 2.  **ALLOW GENERAL QUERIES:** When a user asks a general question related to a tool's domain (e.g., "check the process logs" or "look into the employee database"), you should *pass this query to the appropriate tool*. The tool itself is designed to handle general requests by returning a summary of options or guidance. Do not reject these queries as "too broad."
 
@@ -53,6 +53,125 @@ const systemPrompt = `You are a specialized forensic analysis terminal named V.E
 
 The user is a detective. They will interact with you to solve a case. Be friendly and conversational for general chat, but be a strict, factual tool when it comes.
 `;
+
+
+const tokensCounter: any = {
+  used: 0,
+  total: 400000
+}
+
+const executeChatLoop = async () => {
+  let keepGoing = true;
+
+  while (keepGoing) {
+    showLoadingIndicator();
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        messages: messages,
+        tools: myTools,
+        tool_choice: "auto"
+      })
+    });
+
+    hideLoadingIndicator();
+
+    const data = await response.json();
+    tokensCounter.used += data.usage.total_tokens;
+
+    // 1. Handle API Errors, e.g. rate limits
+    if (data.error) {
+
+      addMessageToWindow(`Error: ${data.error.message}`, "assistant");
+      keepGoing = false;
+      return;
+    }
+
+    // 2. Get message and add to history
+    const responseMessage = data.choices[0].message;
+    messages.push(responseMessage);
+
+    // Check for tool calls
+    if (responseMessage.tool_calls) {
+      for (const toolCall of responseMessage.tool_calls) {
+        setMostRecentTool(toolCall);
+        const functionName = toolCall.function.name;
+        let toolResponseContent;
+        let args;
+
+        try {
+          // 1. Try to parse the function arguments
+          args = JSON.parse(toolCall.function.arguments);
+          const toolCallMessage = `(Calling tool: ${functionName} with args: ${JSON.stringify(args)})`;
+          addMessageToWindow(toolCallMessage, "tool");
+
+          // 2. Try to call the SnapLogic API
+          const toolResponse = await callSnapLogicApi(functionName, args);
+          const toolResponseMessage = `(Tool Response: ${JSON.stringify(toolResponse)})`;
+          addMessageToWindow(toolResponseMessage, "tool");
+          toolResponseContent = toolResponse;
+        } catch (error) {
+          // This catches BOTH parsing and API errors
+          let errorDetails = (error instanceof Error) ? error.message : String(error);
+          const errorMessage = `(Tool: ${functionName} Error: ${errorDetails})`;
+          addMessageToWindow(errorMessage, "tool");
+          toolResponseContent = { error: "Tool call failed", details: errorDetails };
+        }
+
+        messages.push({
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(toolResponseContent)
+        });
+      }
+    } else {
+      // No tool calls, just display the bot message
+      addMessageToWindow(responseMessage.content, "assistant");
+      keepGoing = false;
+    }
+
+    //
+  }
+}
+
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  let userMessage: string = chatInput.value;
+  if (!userMessage.trim()) {
+    return;
+  }
+  chatInput.value = "";
+
+  // 1. Disable the form
+  chatInput.disabled = true;
+  chatInput.placeholder = "Processing";
+
+  // 2. Add user message to UI and history
+  addMessageToWindow(userMessage, "user");
+  messages.push({ role: "user", content: userMessage });
+
+  try {
+    // Call the chat loop
+    await executeChatLoop();
+  }
+  catch (error) {
+    hideLoadingIndicator();
+    console.error("Error fetching bot response:", error);
+    addMessageToWindow("Sorry, there was an error processing your request.", "assistant");
+  } finally {
+    // 3. Re-enable the form
+    chatInput.disabled = false;
+    chatInput.placeholder = "Type your messsage... (Press [Enter] to send)";
+    chatInput.focus();
+  }
+});
 
 
 unlockButton.addEventListener("click", async (e) => {
@@ -138,6 +257,8 @@ const myTools: any[] = [
   // }
 ]
 
+// V1 - potentially deprecated
+/*
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   // await getToolsFromSnap();
@@ -300,6 +421,7 @@ chatForm.addEventListener("submit", async (e) => {
     chatInput.focus();
   }
 })
+*/
 
 const addMessageToWindow = (message: string, messageType: "user" | "assistant" | "tool") => {
   const textBox = document.createElement("div");
