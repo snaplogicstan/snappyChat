@@ -1,6 +1,6 @@
 // This function simulates calling your SnapLogic REST API
 export const callSnapLogicApi = async (functionName: string, args: any) => {
-    const recentToolView = document.getElementById("recent-tool-view");
+    // const recentToolView = document.getElementById("recent-tool-view");
     //recentToolView?.replaceChildren(getLatestToolUI());
     getLatestToolUI();
     console.log("Calling SnapLogic for:", functionName, "with args:", args);
@@ -112,18 +112,18 @@ export const getLatestToolUI = () => {
     // return textBox;
 }
 
-const getContainerWithText = (label: string, text: string) => {
-    const container = document.createElement("div");
-    const labelElem = document.createElement("h3");
-    labelElem.innerText = label;
-    const textElem = document.createElement("p");
-    textElem.innerText = text;
+// const getContainerWithText = (label: string, text: string) => {
+//     const container = document.createElement("div");
+//     const labelElem = document.createElement("h3");
+//     labelElem.innerText = label;
+//     const textElem = document.createElement("p");
+//     textElem.innerText = text;
 
-    container.appendChild(labelElem);
-    container.appendChild(textElem);
+//     container.appendChild(labelElem);
+//     container.appendChild(textElem);
 
-    return container;
-}
+//     return container;
+// }
 
 // const getWorkshopToolsMetadata = [
 //     get{
