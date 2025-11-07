@@ -213,7 +213,7 @@ const getWorkshopKeys = async () => {
   })
 
   const data = await response.json()
-  console.log("Workshop Keys:", data[0].llmKey);
+  // console.log("Workshop Keys:", data[0].llmKey);
   OPENAI_API_KEY = data[0].llmKey;
 }
 
